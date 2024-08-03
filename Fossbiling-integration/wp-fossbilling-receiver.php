@@ -1,21 +1,27 @@
 <?php
-require_once(__DIR__ . '/vendor/autoload.php');
+
+require_once __DIR__ . '/vendor/autoload.php';
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 
-class WPFOSSBillingReceiver {
-    public static function listen() {
+class FBWordPressReceiver
+{
+    public static function listen()
+    {
         try {
             $connection = new AMQPStreamConnection('192.168.129.101', 5672, 'hamza', 'student1', 'myvhost');
             $channel = $connection->channel();
 
-            $channel->queue_declare('fb_to_wp_queue', false, true, false, false);
+            $channel->queue_declare('wordpress_to_fossbilling', false, true, false, false);
 
             $callback = function ($msg) {
                 $data = json_decode($msg->body, true);
+                echo ' [x] Received ', $msg->body, "\n";  // Journalisation de la réception du message
                 self::processMessage($data);
             };
 
-            $channel->basic_consume('fb_to_wp_queue', '', false, true, false, false, $callback);
+            $channel->basic_consume('wordpress_to_fossbilling', '', false, true, false, false, $callback);
+
+            echo " [*] Waiting for messages. To exit press CTRL+C\n";  // Journalisation de l'attente des messages
 
             while ($channel->is_consuming()) {
                 $channel->wait();
@@ -23,80 +29,57 @@ class WPFOSSBillingReceiver {
 
             $channel->close();
             $connection->close();
-        } catch (Exception $e) {
-            error_log('FOSSBilling Integration: RabbitMQ listening error - ' . $e->getMessage());
+        } catch (\Exception $e) {
+            error_log('FOSSBilling WordPress Integration: RabbitMQ listening error - ' . $e->getMessage());
         }
     }
 
-    private static function processMessage($data) {
+    private static function processMessage($data)
+    {
+        echo 'Processing message: ' . print_r($data, true) . "\n";  // Journalisation du traitement du message
+
+        $di = include '/var/www/fossbilling/di.php';
+        $clientService = $di['mod_service']('client');
+
         switch ($data['type']) {
-            case 'customer_added':
-                self::addCustomerToWordPress($data['data']);
+            case 'add_customer':
+                self::addCustomerToFOSSBilling($clientService, $data['data']);
                 break;
-            case 'customer_updated':
-                self::updateCustomerInWordPress($data['data']);
+            case 'update_customer':
+                self::updateCustomerInFOSSBilling($clientService, $data['data']);
                 break;
-            case 'customer_deleted':
-                self::deleteCustomerFromWordPress($data['data']);
+            case 'delete_customer':
+                self::deleteCustomerFromFOSSBilling($clientService, $data['data']);
                 break;
             default:
-                error_log('FOSSBilling Integration: Unknown message type - ' . $data['type']);
+                error_log('FOSSBilling WordPress Integration: Unknown message type - ' . $data['type']);
         }
     }
 
-    private static function addCustomerToWordPress($customerData) {
-        $user = get_user_by('email', $customerData['email']);
-        if (!$user) {
-            $userId = wp_create_user($customerData['email'], wp_generate_password(), $customerData['email']);
-            if (!is_wp_error($userId)) {
-                wp_update_user([
-                    'ID' => $userId,
-                    'first_name' => $customerData['first_name'],
-                    'last_name' => $customerData['last_name'],
-                ]);
-                update_user_meta($userId, 'fossbilling_id', $customerData['id']);
-            } else {
-                error_log('FOSSBilling Integration: Error creating user - ' . $userId->get_error_message());
+    private static function addCustomerToFOSSBilling($clientService, $customerData)
+    {
+        try {
+            echo 'Adding customer to FOSSBilling: ' . print_r($customerData, true) . "\n";  // Journalisation de l'ajout du client
+            $clientService->create($customerData);
+        } catch (\Exception $e) {
+            error_log('FOSSBilling WordPress Integration: Error creating customer - ' . $e->getMessage());
+        }
+    }
+
+    private static function updateCustomerInFOSSBilling($clientService, $customerData)
+    {
+        try {
+            echo 'Updating customer in FOSSBilling: ' . print_r($customerData, true) . "\n";  // Journalisation de la mise à jour du client
+            $client = $clientService->findOneByEmail($customerData['email']);
+            if ($client) {
+                $clientService->update($client['id'], $customerData);
             }
+        } catch (\Exception $e) {
+            error_log('FOSSBilling WordPress Integration: Error updating customer - ' . $e->getMessage());
         }
     }
 
-    private static function updateCustomerInWordPress($customerData) {
-        $user = get_users([
-            'meta_key' => 'fossbilling_id',
-            'meta_value' => $customerData['id'],
-            'number' => 1,
-        ]);
-
-        if (!empty($user)) {
-            $userId = $user[0]->ID;
-            $result = wp_update_user([
-                'ID' => $userId,
-                'user_email' => $customerData['email'],
-                'first_name' => $customerData['first_name'],
-                'last_name' => $customerData['last_name'],
-            ]);
-            if (is_wp_error($result)) {
-                error_log('FOSSBilling Integration: Error updating user - ' . $result->get_error_message());
-            }
-        }
-    }
-
-    private static function deleteCustomerFromWordPress($customerData) {
-        $user = get_users([
-            'meta_key' => 'fossbilling_id',
-            'meta_value' => $customerData['id'],
-            'number' => 1,
-        ]);
-
-        if (!empty($user)) {
-            $result = wp_delete_user($user[0]->ID);
-            if (!$result) {
-                error_log('FOSSBilling Integration: Error deleting user with FOSSBilling ID ' . $customerData['id']);
-            }
-        }
-    }
-}
-
-// Start listening for messages
-WPFOSSBillingReceiver::listen();
+    private static function deleteCustomerFromFOSSBilling($clientService, $customerData)
+    {
+        try {
+            echo 'Deleting customer from FOSSBilling: ' . print_r($customerData, true) . "\n";
