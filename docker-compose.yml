@@ -1,0 +1,52 @@
+version: "3.9"
+services:
+  fossbilling:
+    image: fossbilling/fossbilling:latest
+    restart: always
+    ports:
+      - "192.168.129.101:80:80"
+    volumes:
+      - fossbilling:/var/www/html
+    environment:
+      - DB_HOST=db
+      - DB_USER=fbuser
+      - DB_PASSWORD=student1
+      - DB_NAME=fossbilling
+
+  wordpress:
+    image: wordpress:latest
+    restart: always
+    ports:
+      - "192.168.129.101:81:80"
+    environment:
+      - WORDPRESS_DB_HOST=db
+      - WORDPRESS_DB_USER=wpuser
+      - WORDPRESS_DB_PASSWORD=student1
+      - WORDPRESS_DB_NAME=wordpress
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.2
+    restart: always
+    environment:
+      MYSQL_DATABASE: fossbilling
+      MYSQL_USER: fbuser
+      MYSQL_PASSWORD: student1
+      MYSQL_ROOT_PASSWORD: student1
+    volumes:
+      - mysql:/var/lib/mysql
+
+  rabbitmq:
+    image: rabbitmq:management
+    restart: always
+    ports:
+      - "192.168.129.101:5672:5672"
+      - "192.168.129.101:15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER: hamza
+      - RABBITMQ_DEFAULT_PASS: student1
+
+volumes:
+  fossbilling:
+  mysql:

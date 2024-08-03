@@ -8,7 +8,7 @@ class FBWordPressSender
 {
     private static function getConnection()
     {
-        return new AMQPStreamConnection('192.168.128.200', 5672, 'hamza', 'student1', 'myvhost');
+        return new AMQPStreamConnection('192.168.129.101', 5672, 'hamza', 'student1', 'myvhost');
     }
 
     public static function sendMessage($data, $type)
