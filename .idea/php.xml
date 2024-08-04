@@ -4,6 +4,16 @@
     <include_path>
       <path value="$PROJECT_DIR$/vendor/composer" />
       <path value="$PROJECT_DIR$/vendor/php-amqplib/php-amqplib" />
+      <path value="$PROJECT_DIR$/wp-integration/vendor/composer" />
+      <path value="$PROJECT_DIR$/wp-integration/vendor/php-amqplib/php-amqplib" />
+      <path value="$PROJECT_DIR$/wp-integration/vendor/paragonie/random_compat" />
+      <path value="$PROJECT_DIR$/wp-integration/vendor/paragonie/constant_time_encoding" />
+      <path value="$PROJECT_DIR$/wp-integration/vendor/phpseclib/phpseclib" />
+      <path value="$PROJECT_DIR$/Fossbiling-integration/vendor/phpseclib/phpseclib" />
+      <path value="$PROJECT_DIR$/Fossbiling-integration/vendor/paragonie/constant_time_encoding" />
+      <path value="$PROJECT_DIR$/Fossbiling-integration/vendor/paragonie/random_compat" />
+      <path value="$PROJECT_DIR$/Fossbiling-integration/vendor/composer" />
+      <path value="$PROJECT_DIR$/Fossbiling-integration/vendor/php-amqplib/php-amqplib" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.0">
