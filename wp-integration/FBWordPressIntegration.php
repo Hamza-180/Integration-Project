@@ -56,7 +56,7 @@ class FBWordPressIntegration extends \Box\Mod\Module
             'description'  => 'Integrates FOSSBilling with WordPress using RabbitMQ',
             'icon_url'     => 'icon.png',
             'homepage_url' => '',
-            'author'       => 'Robin',
+            'author'       => 'Hamza',
             'author_url'   => '',
             'license'      => '',
             'version'      => '1.0',

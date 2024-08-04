@@ -8,7 +8,7 @@ class FBWordPressReceiver
     public static function listen()
     {
         try {
-            $connection = new AMQPStreamConnection('192.168.0.200', 5672, 'hamza', 'student1', 'myvhost');
+            $connection = new AMQPStreamConnection('192.168.129.101', 5672, 'hamza', 'student1', 'myvhost');
             $channel = $connection->channel();
 
             $channel->queue_declare('wordpress_to_fossbilling', false, true, false, false);
