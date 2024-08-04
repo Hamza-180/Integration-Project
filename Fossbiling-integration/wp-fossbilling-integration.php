@@ -1,10 +1,13 @@
 <?php
 /*
 Plugin Name: FOSSBilling Integration
-Description: Integrates WordPress with FOSSBilling
+Description: Integrates WordPress with FOSSBilling using RabbitMQ
 Version: 1.0
 Author: Hamza
 */
+
+require_once(__DIR__ . '/wp-fossbilling-sender.php');
+require_once(__DIR__ . '/wp-fossbilling-receiver.php');
 
 // Add menu items
 add_action('admin_menu', 'fossbilling_integration_menu');
@@ -56,21 +59,74 @@ function fossbilling_customers_page() {
     </div>
     <script>
     jQuery(document).ready(function($) {
-        // Dummy function to simulate loading customers
         function loadCustomers() {
-            $('#fossbilling-customers-list').html('<p>No customers found.</p>');
+            $.ajax({
+                url: ajaxurl,
+                data: { action: 'get_fossbilling_customers' },
+                success: function(response) {
+                    $('#fossbilling-customers-list').html(response);
+                }
+            });
         }
 
         loadCustomers();
 
         $('#add-customer-form').submit(function(e) {
             e.preventDefault();
-            alert('Customer added successfully');
-            loadCustomers();
+            $.ajax({
+                url: ajaxurl,
+                method: 'POST',
+                data: {
+                    action: 'add_fossbilling_customer',
+                    first_name: $('input[name="first_name"]').val(),
+                    last_name: $('input[name="last_name"]').val(),
+                    email: $('input[name="email"]').val()
+                },
+                success: function(response) {
+                    alert('Customer added successfully');
+                    loadCustomers();
+                }
+            });
         });
     });
     </script>
     <?php
+}
+
+add_action('wp_ajax_get_fossbilling_customers', 'get_fossbilling_customers');
+add_action('wp_ajax_add_fossbilling_customer', 'add_fossbilling_customer');
+
+function get_fossbilling_customers() {
+    $customers = WPFOSSBillingSender::getCustomers();
+    if (!empty($customers)) {
+        echo '<table class="wp-list-table widefat fixed striped">';
+        echo '<thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Actions</th></tr></thead>';
+        echo '<tbody>';
+        foreach ($customers as $customer) {
+            echo '<tr>';
+            echo '<td>' . esc_html($customer['id']) . '</td>';
+            echo '<td>' . esc_html($customer['first_name'] . ' ' . $customer['last_name']) . '</td>';
+            echo '<td>' . esc_html($customer['email']) . '</td>';
+            echo '<td>';
+            echo '<button class="edit-customer" data-id="' . esc_attr($customer['id']) . '">Edit</button>';
+            echo '<button class="delete-customer" data-id="' . esc_attr($customer['id']) . '">Delete</button>';
+            echo '</td>';
+            echo '</tr>';
+        }
+        echo '</tbody></table>';
+    } else {
+        echo 'No customers found.';
+    }
+    wp_die();
+}
+
+function add_fossbilling_customer() {
+    $first_name = sanitize_text_field($_POST['first_name']);
+    $last_name = sanitize_text_field($_POST['last_name']);
+    $email = sanitize_email($_POST['email']);
+
+    WPFOSSBillingSender::addCustomer($first_name, $last_name, $email);
+    wp_die();
 }
 
 // Enqueue admin scripts and styles
@@ -89,7 +145,10 @@ register_deactivation_hook(__FILE__, 'fossbilling_integration_deactivate');
 register_uninstall_hook(__FILE__, 'fossbilling_integration_uninstall');
 
 function fossbilling_integration_activate() {
-    // Perform any activation tasks here
+    if (!class_exists('PhpAmqpLib\Connection\AMQPStreamConnection')) {
+        deactivate_plugins(plugin_basename(__FILE__));
+        wp_die('This plugin requires the php-amqplib library. Please run "composer install" in the plugin directory.');
+    }
 }
 
 function fossbilling_integration_deactivate() {
