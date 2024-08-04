@@ -6,7 +6,8 @@ services:
     ports:
       - "192.168.129.101:80:80"
     volumes:
-      - fossbilling:/var/www/html
+      - /var/www/fossbilling:/var/www/html
+      - /var/www/integration/fossbilling:/var/www/html/integration
     environment:
       - DB_HOST=db
       - DB_USER=fbuser
@@ -18,6 +19,9 @@ services:
     restart: always
     ports:
       - "192.168.129.101:81:80"
+    volumes:
+      - /var/www/wordpress:/var/www/html
+      - /var/www/integration/wp-integration:/var/www/html/integration
     environment:
       - WORDPRESS_DB_HOST=db
       - WORDPRESS_DB_USER=wpuser
@@ -44,8 +48,8 @@ services:
       - "192.168.129.101:5672:5672"
       - "192.168.129.101:15672:15672"
     environment:
-      - RABBITMQ_DEFAULT_USER: hamza
-      - RABBITMQ_DEFAULT_PASS: student1
+      - RABBITMQ_DEFAULT_USER=hamza
+      - RABBITMQ_DEFAULT_PASS=student1
 
 volumes:
   fossbilling:
