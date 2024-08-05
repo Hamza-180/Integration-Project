@@ -63,3 +63,4 @@ class FBWordPressIntegration extends \Box\Mod\Module
         ];
     }
 }
+?>

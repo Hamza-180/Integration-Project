@@ -159,3 +159,4 @@ function fossbilling_integration_uninstall() {
     // Remove any plugin-related data from the database
     delete_option('fossbilling_api_key');
 }
+?>
