@@ -100,4 +100,7 @@ class WPFOSSBillingReceiver {
 
 // Start listening for messages
 WPFOSSBillingReceiver::listen();
+
+
+
 ?>
