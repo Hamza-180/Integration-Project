@@ -19,38 +19,42 @@ class FBWordPressIntegration extends \Box\Mod\Module
     {
         $params = $event->getParameters();
         $client = $this->di['db']->load('Client', $params['id']);
-        FBWordPressSender::sendMessage([
-            'id' => $client->id,
-            'first_name' => $client->first_name,
-            'last_name' => $client->last_name,
-            'email' => $client->email,
-        ], 'customer_added');
+        $this->sendMessageToWP($client, 'customer_added');
     }
 
     public function onAfterClientUpdate(\Box\Event $event)
     {
         $params = $event->getParameters();
         $client = $this->di['db']->load('Client', $params['id']);
-        FBWordPressSender::sendMessage([
-            'id' => $client->id,
-            'first_name' => $client->first_name,
-            'last_name' => $client->last_name,
-            'email' => $client->email,
-        ], 'customer_updated');
+        $this->sendMessageToWP($client, 'customer_updated');
     }
 
     public function onAfterClientDelete(\Box\Event $event)
     {
         $params = $event->getParameters();
-        FBWordPressSender::sendMessage([
-            'id' => $params['id'],
-        ], 'customer_deleted');
+        $this->sendMessageToWP((object)['id' => $params['id']], 'customer_deleted');
+    }
+
+    protected function sendMessageToWP($client, $action)
+    {
+        $message = [
+            'id' => $client->id,
+            'first_name' => $client->first_name ?? '',
+            'last_name' => $client->last_name ?? '',
+            'email' => $client->email ?? '',
+        ];
+
+        try {
+            FBWordPressSender::sendMessage($message, $action);
+        } catch (Exception $e) {
+            error_log('Error sending message to WordPress: ' . $e->getMessage());
+        }
     }
 
     public static function getConfig()
     {
         return [
-            'id'           => 'wp_integration',
+            'id'           => 'wp-integration',
             'type'         => 'mod',
             'name'         => 'WordPress Integration',
             'description'  => 'Integrates FOSSBilling with WordPress using RabbitMQ',
