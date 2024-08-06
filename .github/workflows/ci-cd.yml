@@ -13,17 +13,21 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Set up SSH
-      uses: webfactory/ssh-agent@v0.5.3
-      with:
-        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+    - name: Install rsync
+      run: sudo apt-get install -y rsync
 
     - name: Deploy to FOSSBilling server
       run: |
-        rsync -avz -e "ssh -o StrictHostKeyChecking=no" Fossbilling-integration/ hamza@192.168.129.101:/var/www/fossbilling/modules/wp-integration/
-        ssh hamza@192.168.129.101 'cd /var/www/fossbilling/modules/wp-integration && composer install'
+        ssh -o StrictHostKeyChecking=no hamza@192.168.129.101 << 'EOF'
+          cd /var/www/fossbilling/modules/wp-integration
+          rsync -avz Fossbilling-integration/ /var/www/fossbilling/modules/wp-integration/
+          composer install
+        EOF
 
     - name: Deploy to WordPress server
       run: |
-        rsync -avz -e "ssh -o StrictHostKeyChecking=no" wp-integration/ hamza@192.168.129.101:/var/www/html/wp-content/plugins/fossbilling-integration/
-        ssh hamza@192.168.129.101 'cd /var/www/html/wp-content/plugins/fossbilling-integration && composer install'
+        ssh -o StrictHostKeyChecking=no hamza@192.168.129.101 << 'EOF'
+          cd /var/www/html/wp-content/plugins/fossbilling-integration
+          rsync -avz wp-integration/ /var/www/html/wp-content/plugins/fossbilling-integration/
+          composer install
+        EOF
