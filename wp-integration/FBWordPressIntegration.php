@@ -50,7 +50,7 @@ class FBWordPressIntegration extends \Box\Mod\Module
     public static function getConfig()
     {
         return [
-            'id'           => 'wp_integration',
+            'id'           => 'wp-integration',
             'type'         => 'mod',
             'name'         => 'WordPress Integration',
             'description'  => 'Integrates FOSSBilling with WordPress using RabbitMQ',
