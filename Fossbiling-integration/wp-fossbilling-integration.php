@@ -6,30 +6,44 @@ Version: 1.0
 Author: Hamza
 */
 
+// Debugging line
+error_log('FOSSBilling Integration plugin loaded');
+
 require_once(__DIR__ . '/wp-fossbilling-sender.php');
+error_log('wp-fossbilling-sender.php included');
+
 require_once(__DIR__ . '/wp-fossbilling-receiver.php');
+error_log('wp-fossbilling-receiver.php included');
 
 // Add menu items
 add_action('admin_menu', 'fossbilling_integration_menu');
 add_action('admin_init', 'fossbilling_integration_settings_init');
 
 function fossbilling_integration_menu() {
+    // Debugging line
+    error_log('Menu function called');
     add_menu_page('FOSSBilling Customers', 'FOSSBilling Customers', 'manage_options', 'fossbilling-customers', 'fossbilling_customers_page');
     add_submenu_page('fossbilling-customers', 'Settings', 'Settings', 'manage_options', 'fossbilling-settings', 'fossbilling_settings_page');
 }
 
 function fossbilling_integration_settings_init() {
+    // Debugging line
+    error_log('Settings init function called');
     register_setting('fossbilling_integration', 'fossbilling_api_key');
     add_settings_section('fossbilling_integration_section', 'FOSSBilling API Settings', null, 'fossbilling-settings');
     add_settings_field('fossbilling_api_key', 'API Key', 'fossbilling_api_key_callback', 'fossbilling-settings', 'fossbilling_integration_section');
 }
 
 function fossbilling_api_key_callback() {
+    // Debugging line
+    error_log('API key callback function called');
     $api_key = get_option('fossbilling_api_key');
     echo "<input type='text' name='fossbilling_api_key' value='" . esc_attr($api_key) . "' />";
 }
 
 function fossbilling_settings_page() {
+    // Debugging line
+    error_log('Settings page function called');
     ?>
     <div class="wrap">
         <h1>FOSSBilling Integration Settings</h1>
@@ -45,6 +59,8 @@ function fossbilling_settings_page() {
 }
 
 function fossbilling_customers_page() {
+    // Debugging line
+    error_log('Customers page function called');
     ?>
     <div class="wrap">
         <h1>FOSSBilling Customers</h1>
@@ -93,10 +109,12 @@ function fossbilling_customers_page() {
     <?php
 }
 
+error_log('Hooking into AJAX actions');
 add_action('wp_ajax_get_fossbilling_customers', 'get_fossbilling_customers');
 add_action('wp_ajax_add_fossbilling_customer', 'add_fossbilling_customer');
 
 function get_fossbilling_customers() {
+    error_log('Getting customers from FOSSBilling');
     $customers = WPFOSSBillingSender::getCustomers();
     if (!empty($customers)) {
         echo '<table class="wp-list-table widefat fixed striped">';
@@ -121,6 +139,7 @@ function get_fossbilling_customers() {
 }
 
 function add_fossbilling_customer() {
+    error_log('Adding customer to FOSSBilling');
     $first_name = sanitize_text_field($_POST['first_name']);
     $last_name = sanitize_text_field($_POST['last_name']);
     $email = sanitize_email($_POST['email']);
@@ -129,7 +148,6 @@ function add_fossbilling_customer() {
     wp_die();
 }
 
-// Enqueue admin scripts and styles
 add_action('admin_enqueue_scripts', 'fossbilling_enqueue_admin_scripts');
 
 function fossbilling_enqueue_admin_scripts($hook) {
@@ -139,12 +157,12 @@ function fossbilling_enqueue_admin_scripts($hook) {
     wp_enqueue_script('jquery');
 }
 
-// Activation, deactivation, and uninstall hooks
 register_activation_hook(__FILE__, 'fossbilling_integration_activate');
 register_deactivation_hook(__FILE__, 'fossbilling_integration_deactivate');
 register_uninstall_hook(__FILE__, 'fossbilling_integration_uninstall');
 
 function fossbilling_integration_activate() {
+    error_log('FOSSBilling Integration plugin activated');
     if (!class_exists('PhpAmqpLib\Connection\AMQPStreamConnection')) {
         deactivate_plugins(plugin_basename(__FILE__));
         wp_die('This plugin requires the php-amqplib library. Please run "composer install" in the plugin directory.');
@@ -152,11 +170,10 @@ function fossbilling_integration_activate() {
 }
 
 function fossbilling_integration_deactivate() {
-    // Perform any cleanup tasks here
+    error_log('FOSSBilling Integration plugin deactivated');
 }
 
 function fossbilling_integration_uninstall() {
-    // Remove any plugin-related data from the database
+    error_log('FOSSBilling Integration plugin uninstalled');
     delete_option('fossbilling_api_key');
 }
-?>

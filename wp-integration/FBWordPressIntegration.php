@@ -9,7 +9,6 @@ class FBWordPressIntegration extends \Box\Mod\Module
 
     protected function registerHooks()
     {
-        // Register hooks for client actions
         $this->di['hooks']->on('after_client_signup', [$this, 'onAfterClientSignup']);
         $this->di['hooks']->on('after_client_update', [$this, 'onAfterClientUpdate']);
         $this->di['hooks']->on('after_client_delete', [$this, 'onAfterClientDelete']);
