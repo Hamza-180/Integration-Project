@@ -66,7 +66,7 @@ jobs:
         CWWLh4YWlPMAAAAbaGFtemEuYW1naGFyQHN0dWRlbnQuZWhiLmJl
         -----END OPENSSH PRIVATE KEY-----" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan your_server_ip >> ~/.ssh/known_hosts
+        ssh-keyscan 192.168.129.68 >> ~/.ssh/known_hosts
 
     - name: Deploy to Server
       run: |
