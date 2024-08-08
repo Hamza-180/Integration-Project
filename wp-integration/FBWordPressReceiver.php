@@ -8,10 +8,10 @@ class FBWordPressReceiver
     public static function listen()
     {
         try {
-            $connection = new AMQPStreamConnection('192.168.129.101', 5672, 'hamza', 'student1', 'myvhost');
+            $connection = new AMQPStreamConnection('192.168.129.68', 5672, 'hamza', 'student1', 'myvhost');
             $channel = $connection->channel();
 
-            $channel->queue_declare('wordpress_to_fossbilling', false, true, false, false);
+            $channel->queue_bind('wp_to_fb_queue', 'wordpress_to_fossbilling', 'wp_to_fb');
 
             $callback = function ($msg) {
                 $data = json_decode($msg->body, true);

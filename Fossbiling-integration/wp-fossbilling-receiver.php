@@ -5,7 +5,7 @@ use PhpAmqpLib\Connection\AMQPStreamConnection;
 class WPFOSSBillingReceiver {
     public static function listen() {
         try {
-            $connection = new AMQPStreamConnection('192.168.129.101', 5672, 'hamza', 'student1', 'myvhost');
+            $connection = new AMQPStreamConnection('192.168.129.68', 5672, 'hamza', 'student1', '/');
             $channel = $connection->channel();
 
             $channel->queue_declare('fb_to_wp_queue', false, true, false, false);
@@ -15,7 +15,7 @@ class WPFOSSBillingReceiver {
                 self::processMessage($data);
             };
 
-            $channel->basic_consume('fb_to_wp_queue', '', false, true, false, false, $callback);
+            $channel->queue_bind('fb_to_wp_queue', 'fossbilling_to_wordpress', 'fb_to_wp');
 
             while ($channel->is_consuming()) {
                 $channel->wait();

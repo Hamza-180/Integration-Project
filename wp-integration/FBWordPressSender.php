@@ -8,7 +8,7 @@ class FBWordPressSender
 {
     private static function getConnection()
     {
-        return new AMQPStreamConnection('192.168.129.101', 5672, 'hamza', 'student1', 'myvhost');
+        return new AMQPStreamConnection('192.168.129.68', 5672, 'hamza', 'student1', '/');
     }
 
     public static function sendMessage($data, $type)
@@ -22,7 +22,7 @@ class FBWordPressSender
                 'data' => $data
             ]));
 
-            $channel->basic_publish($message, '', 'fossbilling_to_wordpress');
+           $channel->basic_publish($message, 'fossbilling_to_wordpress', 'fb_to_wp');
 
             $channel->close();
             $connection->close();

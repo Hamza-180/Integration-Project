@@ -1,51 +1,34 @@
 <?php
-// URL de l'API FOSSBilling
-$api_urls = [
+require_once(__DIR__ . '/vendor/autoload.php');
+use PhpAmqpLib\Connection\AMQPStreamConnection;
+use PhpAmqpLib\Message\AMQPMessage;
 
-    'http://192.168.129.101/api/clients/create',
-    'http://192.168.129.101/api/client',
-    'http://192.168.129.101/api/v1/client/create'
-];
+$connection = new AMQPStreamConnection('192.168.129.68', 5672, 'hamza', 'student1', '/');
+$channel = $connection->channel();
 
-// Clé API FOSSBilling
-$api_key = 'iga8FSS2348vg4DmbNwZquhXlYi4N6TS'; // Remplacez par votre clé API
+// Déclarez l'échange si nécessaire
+$channel->exchange_declare('fossbilling_to_wordpress', 'direct', false, true, false);
 
-// Données de l'utilisateur à envoyer à l'API
-$user_data = array(
-    'first_name' => 'John',
-    'last_name' => 'Doe',
-    'email' => 'john.doe@example.com',
-    'username' => 'johndoe',
-    'password' => 'securepassword' // Assurez-vous que le mot de passe répond aux exigences de sécurité
-);
+$messageBody = json_encode([
+    'type' => 'customer_added',
+    'data' => [
+        'id' => 123,
+        'email' => 'test@example.com',
+        'first_name' => 'John',
+        'last_name' => 'Doe'
+    ]
+]);
 
-// Configuration des en-têtes de la requête
-$headers = array(
-    'Content-Type: application/json',
-    'Authorization: Basic ' . base64_encode($api_key . ':')
-);
+$message = new AMQPMessage($messageBody, [
+    'content_type' => 'application/json',
+    'delivery_mode' => AMQPMessage::DELIVERY_MODE_PERSISTENT
+]);
 
-// Configuration de la requête
-$options = array(
-    'http' => array(
-        'header' => implode("\r\n", $headers),
-        'method' => 'POST',
-        'content' => json_encode($user_data),
-        'ignore_errors' => true // Pour obtenir le contenu même en cas d'erreur HTTP
-    )
-);
+// Publiez le message
+$channel->basic_publish($message, 'fossbilling_to_wordpress', 'fb_to_wp');
 
-// Création du contexte de la requête
-$context = stream_context_create($options);
+echo "Message sent.\n";
 
-// Exécution de la requête
-$response = file_get_contents($api_url, false, $context);
-
-// Affichage de la réponse
-if ($response === FALSE) {
-    echo "Erreur lors de l'envoi de la requête.";
-} else {
-    echo "Réponse de l'API : " . $response;
-}
-
+$channel->close();
+$connection->close();
 ?>
