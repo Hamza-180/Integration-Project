@@ -13,21 +13,62 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Install rsync
-      run: sudo apt-get install -y rsync
-
-    - name: Deploy to FOSSBilling server
+    - name: Set up SSH
       run: |
-        ssh -o StrictHostKeyChecking=no hamza@192.168.129.101 << 'EOF'
-          cd /var/www/fossbilling/modules/wp-integration
-          rsync -avz Fossbilling-integration/ /var/www/fossbilling/modules/wp-integration/
-          composer install
-        EOF
+        mkdir -p ~/.ssh
+        echo "-----BEGIN OPENSSH PRIVATE KEY-----
+        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
+        -----END OPENSSH PRIVATE KEY-----" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan your_server_ip >> ~/.ssh/known_hosts
 
-    - name: Deploy to WordPress server
+    - name: Deploy to Server
       run: |
-        ssh -o StrictHostKeyChecking=no hamza@192.168.129.101 << 'EOF'
-          cd /var/www/html/wp-content/plugins/fossbilling-integration
-          rsync -avz wp-integration/ /var/www/html/wp-content/plugins/fossbilling-integration/
-          composer install
-        EOF
+        rsync -avz --exclude='.git' --exclude='node_modules' . hamza@192.168.129.68:/var/www/html/wordpress/wp-content/plugins/fossbilling-integration/
+        rsync -avz --exclude='.git' --exclude='node_modules' . hamza@192.168.129.68:/var/www/html/fossbilling/modules/wp-integration/
