@@ -31,7 +31,7 @@ class FBWordPressReceiver
         }
     }
 
-    private static function processMessage($data)
+    public static function processMessage($data)
     {
         $di = include '/var/www/fossbilling/di.php';
         $clientService = $di['mod_service']('client');

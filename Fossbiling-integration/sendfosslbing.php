@@ -13,4 +13,3 @@ $channel->basic_publish($message, 'fossbilling_to_wordpress', 'fb_to_wp');
 
 $channel->close();
 $connection->close();
-
