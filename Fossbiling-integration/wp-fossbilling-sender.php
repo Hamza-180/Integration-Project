@@ -6,7 +6,7 @@ use PhpAmqpLib\Message\AMQPMessage;
 class WPFOSSBillingSender {
     private static function getConnection() {
         try {
-            return new AMQPStreamConnection('192.168.129.68', 5672, 'hamza', 'student1', 'myvhost');
+            return new AMQPStreamConnection('192.168.129.68', 5672, 'hamza', 'student1', '');
         } catch (Exception $e) {
             error_log('FOSSBilling Integration: RabbitMQ connection error - ' . $e->getMessage());
             return null;
